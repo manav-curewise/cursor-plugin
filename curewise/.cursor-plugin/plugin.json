@@ -8,7 +8,7 @@
     "email": "support@curewise.com"
   },
   "homepage": "https://app.curewise.com/plugins",
-  "repository": "https://github.com/CureWise/cursor-plugin",
+  "repository": "https://github.com/manav-curewise/cursor-plugin",
   "license": "MIT",
   "keywords": ["mcp", "health", "clinical", "curewise", "oauth"],
   "logo": "assets/logo.png"

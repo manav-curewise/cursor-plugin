@@ -1,44 +1,39 @@
 # CureWise — Cursor Plugin
 
-A **Cursor-only** plugin repo for the CureWise MCP server. It uses the
-single-plugin layout Cursor's marketplace import expects (`.cursor-plugin/plugin.json`
-at the repo root), so there is no multi-plugin `marketplace.json` and no
-ambiguous `source` field to get wrong.
+A **Cursor-only** marketplace repo for the CureWise MCP server, using
+Cursor's documented **multi-plugin marketplace layout**: a root
+`.cursor-plugin/marketplace.json` that lists each plugin by a bare
+subfolder name (not `"./"`, not `"."`). This is the layout Cursor's
+**Dashboard → Plugins → Team Marketplaces → Add Marketplace (by URL)** flow
+expects — it always parses `marketplace.json`, even for a catalog of one
+plugin. Pointing "Add Marketplace" at a repo with only `.cursor-plugin/plugin.json`
+at the root (no `marketplace.json`) is what caused the import to silently
+resolve to an empty marketplace.
 
 This repo intentionally does **not** try to also serve Claude Code / Codex —
 those have their own repos (`curewise-claude-plugin`, `codex-plugin`) with
-their own manifest conventions. Mixing all three in one root is what caused
-the previous marketplace import to fail.
-
-## Why this repo exists
-
-The old `curewise-plugin` repo put `.cursor-plugin/marketplace.json` at the
-root with a single entry `"source": "./"`. Cursor's importer expects either:
-
-- a **single-plugin repo**: `.cursor-plugin/plugin.json` at the repo root
-  (what this repo does), or
-- a **multi-plugin repo**: `.cursor-plugin/marketplace.json` at the root,
-  with each plugin in its own subfolder and `"source"` as a bare folder name
-  (e.g. `"curewise"`, not `"./curewise"`).
-
-Since there is only one plugin, the single-plugin layout is simpler and
-avoids the `source: "./"` / `source: "."` failure mode entirely.
+their own manifest conventions. Mixing all three at one root, plus a
+root-level `source: "./"` marketplace entry, is what caused the original
+`curewise-plugin` repo's import to fail.
 
 ## Structure
 
 ```text
 cursor-plugin/
 ├── .cursor-plugin/
-│   └── plugin.json       # Required Cursor Plugin manifest
-├── mcp.json               # CureWise MCP server (OAuth, no API key needed)
-├── skills/
-│   ├── curewise/SKILL.md
-│   ├── clinical-trials/SKILL.md
-│   ├── health-records/SKILL.md
-│   ├── cross-check/SKILL.md
-│   └── documents/SKILL.md
-├── assets/
-│   └── logo.png
+│   └── marketplace.json   # Catalog: lists the "curewise" plugin
+├── curewise/                # The plugin itself, in its own subfolder
+│   ├── .cursor-plugin/
+│   │   └── plugin.json      # Required Cursor Plugin manifest
+│   ├── mcp.json              # CureWise MCP server (OAuth, no API key needed)
+│   ├── skills/
+│   │   ├── curewise/SKILL.md
+│   │   ├── clinical-trials/SKILL.md
+│   │   ├── health-records/SKILL.md
+│   │   ├── cross-check/SKILL.md
+│   │   └── documents/SKILL.md
+│   └── assets/
+│       └── logo.png
 ├── scripts/
 │   └── validate.mjs       # Structural check, no deps/network required
 └── LICENSE
@@ -95,16 +90,31 @@ Manual API keys (`https://app.curewise.com/me/api-keys`) still work as a
 fallback for clients that don't support OAuth, but Cursor users should never
 need one.
 
-## Installing locally for testing
+## Installing
 
-1. In Cursor: **Settings → Plugins → Add Marketplace** (or team marketplace
-   equivalent) and point it at this repo.
-2. Install the `curewise` plugin.
-3. Cursor should immediately prompt an OAuth sign-in/consent flow in the
-   browser — confirm you land on `app.curewise.com`'s consent screen, approve
-   it, and get redirected back.
-4. Ask the agent something that needs a CureWise tool (e.g. "list my saved
+1. In the Cursor dashboard: **Plugins → Team Marketplaces → Add Marketplace**,
+   paste `https://github.com/manav-curewise/cursor-plugin` and save.
+2. The marketplace should now show one plugin: **curewise**. If it still
+   shows empty, see Troubleshooting below.
+3. Install the `curewise` plugin from that marketplace.
+4. Cursor should prompt an OAuth sign-in/consent flow in the browser —
+   confirm you land on `app.curewise.com`'s consent screen, approve it, and
+   get redirected back.
+5. Ask the agent something that needs a CureWise tool (e.g. "list my saved
    clinical trials") to confirm the MCP connection is live.
+
+## Troubleshooting "Add Marketplace" shows nothing
+
+- Confirm `.cursor-plugin/marketplace.json` exists **at the repo root** of
+  the branch Cursor is reading (usually `main`) — not inside a subfolder.
+- Confirm each `plugins[].source` is a bare folder name relative to the repo
+  root (`"curewise"`), never `"./curewise"`, `"."`, or an absolute path.
+- Confirm `curewise/.cursor-plugin/plugin.json` exists and its `"name"`
+  matches the marketplace entry's `"name"` exactly.
+- If the repo is private, make sure the GitHub account/org Cursor is
+  authenticated as actually has read access to it.
+- Try removing and re-adding the marketplace entry rather than refreshing —
+  some imports cache the first (failed) parse.
 
 ## Validating the repo shape
 

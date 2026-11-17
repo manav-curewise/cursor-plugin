@@ -1,0 +1,17 @@
+{
+  "name": "curewise-cursor",
+  "owner": {
+    "name": "CureWise",
+    "email": "support@curewise.com"
+  },
+  "metadata": {
+    "description": "CureWise plugins for Cursor"
+  },
+  "plugins": [
+    {
+      "name": "curewise",
+      "source": "curewise",
+      "description": "CureWise MCP plugin for profile, records, clinical trials, documents, and cross-check workflows. Connects over OAuth — no API key required."
+    }
+  ]
+}

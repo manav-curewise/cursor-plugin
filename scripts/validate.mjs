@@ -136,23 +136,59 @@ async function validateLogo(pluginRoot, manifest) {
 }
 
 async function main() {
-  const manifestPath = path.join(repoRoot, ".cursor-plugin", "plugin.json");
-  const manifest = await readJsonFile(manifestPath, "Plugin manifest");
-  if (!manifest) {
+  const marketplacePath = path.join(repoRoot, ".cursor-plugin", "marketplace.json");
+  const marketplace = await readJsonFile(marketplacePath, "Marketplace manifest");
+  if (!marketplace) {
     summarizeAndExit();
     return;
   }
 
-  if (typeof manifest.name !== "string" || !nameAndSkillPattern.test(manifest.name)) {
-    addError('Plugin manifest "name" must be lowercase kebab-case.');
+  if (typeof marketplace.name !== "string" || !nameAndSkillPattern.test(marketplace.name)) {
+    addError('Marketplace manifest "name" must be lowercase kebab-case.');
   }
-  if (!manifest.description) {
-    addWarning('Plugin manifest is missing a "description".');
+  if (!marketplace.owner?.name) {
+    addError('Marketplace manifest "owner.name" is required.');
+  }
+  if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
+    addError('Marketplace manifest "plugins" must be a non-empty array.');
+    summarizeAndExit();
+    return;
   }
 
-  await validateLogo(repoRoot, manifest);
-  await validateSkills(repoRoot);
-  await validateMcp(repoRoot);
+  for (const entry of marketplace.plugins) {
+    if (typeof entry.source !== "string" || entry.source.length === 0) {
+      addError(`Plugin entry "${entry.name}" is missing a "source" path.`);
+      continue;
+    }
+    if (entry.source.startsWith("./") || entry.source.startsWith("/") || entry.source === ".") {
+      addError(
+        `Plugin entry "${entry.name}" has source "${entry.source}" — use a bare folder name (e.g. "${entry.name}"), not "./" or ".".`
+      );
+    }
+
+    const pluginDir = path.resolve(repoRoot, entry.source);
+    if (!(await pathExists(pluginDir))) {
+      addError(`Plugin entry "${entry.name}": source directory not found: ${entry.source}`);
+      continue;
+    }
+
+    const manifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
+    const manifest = await readJsonFile(manifestPath, `${entry.name} plugin manifest`);
+    if (!manifest) continue;
+
+    if (typeof manifest.name !== "string" || !nameAndSkillPattern.test(manifest.name)) {
+      addError(`${entry.name}: plugin.json "name" must be lowercase kebab-case.`);
+    }
+    if (manifest.name && manifest.name !== entry.name) {
+      addError(
+        `${entry.name}: marketplace entry name does not match plugin.json name ("${manifest.name}").`
+      );
+    }
+
+    await validateLogo(pluginDir, manifest);
+    await validateSkills(pluginDir);
+    await validateMcp(pluginDir);
+  }
 
   summarizeAndExit();
 }
