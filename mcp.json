@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "curewise": {
+      "url": "https://app.curewise.com/api/mcp"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "curewise",
+  "displayName": "CureWise",
+  "description": "CureWise MCP plugin for profile, clinical trials, health records, documents, and cross-check workflows. Connects with OAuth — no manual API key required.",
+  "version": "1.0.0",
+  "author": {
+    "name": "CureWise",
+    "email": "support@curewise.com"
+  },
+  "homepage": "https://app.curewise.com/plugins",
+  "repository": "https://github.com/CureWise/cursor-plugin",
+  "license": "MIT",
+  "keywords": ["mcp", "health", "clinical", "curewise", "oauth"],
+  "logo": "assets/logo.png"
+}
